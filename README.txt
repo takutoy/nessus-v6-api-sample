@@ -4,6 +4,12 @@ Nessus v6 REST API sample for C#/.NET4.5
 login/logout, launch, export, and download scan.
 
 
+requirement
+====================
+- Json.NET (install with NuGet)
+- Add Reference for System.Net.Http
+
+
 license
 ====================
         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
