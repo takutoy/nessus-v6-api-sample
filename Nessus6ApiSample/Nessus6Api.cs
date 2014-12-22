@@ -19,7 +19,7 @@ namespace Nessus6ApiSample
             nessusip = ipaddress;
         }
 
-        async Task<JObject> Connect(string method, string resource, JObject param = null)
+        async Task<JObject> ConnectAsync(string method, string resource, JObject param = null)
         {
             Uri uri = new Uri(string.Format("https://{0}:8834{1}", nessusip, resource));
 
@@ -62,7 +62,7 @@ namespace Nessus6ApiSample
                 new JProperty("username", login),
                 new JProperty("password", password)
                 );
-            var json = await Connect("POST", "/session", param);
+            var json = await ConnectAsync("POST", "/session", param);
 
             this.token = (string)json["token"];
             return token;
@@ -70,7 +70,7 @@ namespace Nessus6ApiSample
 
         public async Task LogoutAsync()
         {
-            var response = await Connect("DELETE", "/session");
+            var response = await ConnectAsync("DELETE", "/session");
             return;
         }
 
@@ -81,7 +81,7 @@ namespace Nessus6ApiSample
         /// <returns>dictionary of policy title and uuid</returns>
         public async Task<Dictionary<string, string>> GetPolicyTemplatesAsync()
         {
-            var response = await Connect("GET", "/editor/policy/templates");
+            var response = await ConnectAsync("GET", "/editor/policy/templates");
             var data = response.SelectToken("templates").ToDictionary(_ => (string)_["title"], _ => (string)_["uuid"]);
             return data;
         }
@@ -103,7 +103,7 @@ namespace Nessus6ApiSample
                     new JProperty("description", description),
                     new JProperty("text_targets", targets))));
 
-            var response = await Connect("POST", "/scans", param);
+            var response = await ConnectAsync("POST", "/scans", param);
 
             return (int)response["scan"]["id"];
         }
@@ -116,7 +116,7 @@ namespace Nessus6ApiSample
         public async Task<string> LaunchScanAsync(int scan_id)
         {
             string resource = string.Format("/scans/{0}/launch", scan_id);
-            var response = await Connect("POST", resource);
+            var response = await ConnectAsync("POST", resource);
             return (string)response["scan_uuid"];
         }
 
@@ -126,10 +126,10 @@ namespace Nessus6ApiSample
         /// </summary>
         /// <param name="scan_id"></param>
         /// <returns>dictionary of scan uuid and history id</returns>
-        public async Task<Dictionary<string, int>> GetScanHistories(int scan_id)
+        public async Task<Dictionary<string, int>> GetScanHistoriesAsync(int scan_id)
         {
             string resource = string.Format("/scans/{0}", scan_id);
-            var response = await Connect("GET", resource);
+            var response = await ConnectAsync("GET", resource);
             var data = response.SelectToken("history").ToDictionary(_ => (string)_["uuid"], _ => (int)_["history_id"]);
             return data;
         }
@@ -139,10 +139,10 @@ namespace Nessus6ApiSample
         /// </summary>
         /// <param name="scan_id"></param>
         /// <returns>scan status string</returns>
-        public async Task<string> GetScanStatus(int scan_id, int history_id)
+        public async Task<string> GetScanStatusAsync(int scan_id, int history_id)
         {
             string resource = string.Format("/scans/{0}?history_id={1}", scan_id, history_id);
-            var response = await Connect("GET", resource);
+            var response = await ConnectAsync("GET", resource);
             var data = (string)response["info"]["status"];
             return data;
         }
@@ -165,12 +165,12 @@ namespace Nessus6ApiSample
                 param["history_id"] = history_id;
             }
 
-            var response = await Connect("POST", string.Format("/scans/{0}/export", scan_id), param);
+            var response = await ConnectAsync("POST", string.Format("/scans/{0}/export", scan_id), param);
             var fid = (int)response["file"];
 
             while (true)
             {
-                var statusresponse = await Connect("GET", string.Format("/scans/{0}/export/{1}/status", scan_id, fid));
+                var statusresponse = await ConnectAsync("GET", string.Format("/scans/{0}/export/{1}/status", scan_id, fid));
                 if ((string)statusresponse["status"] != "loading") break;
                 await Task.Delay(1000);
             }
@@ -201,13 +201,13 @@ namespace Nessus6ApiSample
         /// <param name="sid"></param>
         /// <param name="hid"></param>
         /// <returns></returns>
-        public async Task DeleteScan(int scan_id, int history_id = -1)
+        public async Task DeleteScanAsync(int scan_id, int history_id = -1)
         {
             string resource = history_id == -1 ?
                 string.Format("/scans/{0}", scan_id) :
                 string.Format("/scans/{0}/history/{1}", scan_id, history_id);
 
-            var response = await Connect("DELETE", resource);
+            var response = await ConnectAsync("DELETE", resource);
             return;
         }
     }

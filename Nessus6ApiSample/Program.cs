@@ -30,12 +30,12 @@ namespace Nessus6ApiSample
             var scan_id = await nessus.CreateScanAsync(scanname, basic_network_scan_uuid, "127.0.0.1");
             var scan_uuid = await nessus.LaunchScanAsync(scan_id);
 
-            var history_ids = await nessus.GetScanHistories(scan_id);
+            var history_ids = await nessus.GetScanHistoriesAsync(scan_id);
             var history_id = history_ids[scan_uuid];
 
             while (true)
             {
-                var status = await nessus.GetScanStatus(scan_id, history_id);
+                var status = await nessus.GetScanStatusAsync(scan_id, history_id);
                 if (status != "running") break;
                 await Task.Delay(1000 * 10);
             }
@@ -48,7 +48,7 @@ namespace Nessus6ApiSample
             var downloadhtml = await nessus.DownloadScanAsync(scan_id, fidhtml);
             File.WriteAllBytes(scanname + ".html", downloadhtml);
 
-            await nessus.DeleteScan(scan_id);
+            await nessus.DeleteScanAsync(scan_id);
 
             await nessus.LogoutAsync();
         }
