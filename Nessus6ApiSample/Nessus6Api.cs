@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Nessus6ApiSample
@@ -156,6 +157,12 @@ namespace Nessus6ApiSample
         /// <returns>file id</returns>
         public async Task<int> ExportScanAsync(int scan_id, int history_id = -1, string format = "nessus")
         {
+            return await ExportScanAsync(scan_id, history_id, format, CancellationToken.None);
+        }
+
+
+        public async Task<int> ExportScanAsync(int scan_id, int history_id, string format, CancellationToken cancelToken)
+        {
             JObject param = new JObject(
                 new JProperty("format", format),
                 new JProperty("chapters", "vuln_hosts_summary")
@@ -170,6 +177,7 @@ namespace Nessus6ApiSample
 
             while (true)
             {
+                cancelToken.ThrowIfCancellationRequested();
                 var statusresponse = await ConnectAsync("GET", string.Format("/scans/{0}/export/{1}/status", scan_id, fid));
                 if ((string)statusresponse["status"] != "loading") break;
                 await Task.Delay(1000);
