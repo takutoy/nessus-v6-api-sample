@@ -18,6 +18,7 @@ namespace Nessus6ApiSample
         {
             // Ignore SSL validation
             System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+            System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls12;
 
             string scanname = "test_" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
