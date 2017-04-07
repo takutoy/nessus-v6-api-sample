@@ -14,6 +14,7 @@ namespace Nessus6ApiSample
     {
         string nessusip = null;
         string token = null;
+        HttpClient hc = new HttpClient();
 
         public Nessus6Api(string ipaddress)
         {
@@ -24,36 +25,28 @@ namespace Nessus6ApiSample
         {
             Uri uri = new Uri(string.Format("https://{0}:8834{1}", nessusip, resource));
 
-            using (HttpClient hc = new HttpClient())
+            switch (method.ToUpper())
             {
-                if (token != null)
-                {
-                    hc.DefaultRequestHeaders.Add("X-Cookie", string.Format("token={0}", token));
-                }
-
-                switch (method.ToUpper())
-                {
-                    default:
-                        throw new ArgumentException();
-                    case "GET":
-                        var getjson = await hc.GetStringAsync(uri);
-                        return (JObject)JsonConvert.DeserializeObject(getjson);
-                    case "POST":
-                        HttpContent postcontent;
-                        if (param == null) postcontent = new StringContent("");
-                        else postcontent = new StringContent(param.ToString(), Encoding.UTF8, "application/json");
-                        var postresponse = await hc.PostAsync(uri, postcontent);
-                        var postrjson = (JObject)JsonConvert.DeserializeObject(await postresponse.Content.ReadAsStringAsync());
-                        return postrjson;
-                    case "PUT":
-                        var putresponse = await hc.PostAsync(uri, new StringContent(param.ToString(), Encoding.UTF8, "application/json"));
-                        var putjson = (JObject)JsonConvert.DeserializeObject(await putresponse.Content.ReadAsStringAsync());
-                        return putjson;
-                    case "DELETE":
-                        var deleteresponse = await hc.DeleteAsync(uri);
-                        var deletejson = (JObject)JsonConvert.DeserializeObject(await deleteresponse.Content.ReadAsStringAsync());
-                        return deletejson;
-                }
+                default:
+                    throw new ArgumentException();
+                case "GET":
+                    var getjson = await hc.GetStringAsync(uri);
+                    return (JObject)JsonConvert.DeserializeObject(getjson);
+                case "POST":
+                    HttpContent postcontent;
+                    if (param == null) postcontent = new StringContent("", Encoding.UTF8, "application/json");
+                    else postcontent = new StringContent(param.ToString(), Encoding.UTF8, "application/json");
+                    var postresponse = await hc.PostAsync(uri, postcontent);
+                    var postrjson = (JObject)JsonConvert.DeserializeObject(await postresponse.Content.ReadAsStringAsync());
+                    return postrjson;
+                case "PUT":
+                    var putresponse = await hc.PostAsync(uri, new StringContent(param.ToString(), Encoding.UTF8, "application/json"));
+                    var putjson = (JObject)JsonConvert.DeserializeObject(await putresponse.Content.ReadAsStringAsync());
+                    return putjson;
+                case "DELETE":
+                    var deleteresponse = await hc.DeleteAsync(uri);
+                    var deletejson = (JObject)JsonConvert.DeserializeObject(await deleteresponse.Content.ReadAsStringAsync());
+                    return deletejson;
             }
         }
 
@@ -66,6 +59,7 @@ namespace Nessus6ApiSample
             var json = await ConnectAsync("POST", "/session", param);
 
             this.token = (string)json["token"];
+            hc.DefaultRequestHeaders.Add("X-Cookie", string.Format("token={0}", token));
             return token;
         }
 
@@ -194,13 +188,9 @@ namespace Nessus6ApiSample
         /// <returns>content of export file</returns>
         public async Task<byte[]> DownloadScanAsync(int scan_id, int fileId)
         {
-            using (HttpClient hc = new HttpClient())
-            {
-                hc.DefaultRequestHeaders.Add("X-Cookie", string.Format("token={0}", token));
-                Uri uri = new Uri(string.Format("https://{0}:8834/scans/{1}/export/{2}/download", nessusip, scan_id, fileId));
-                var response = await hc.GetByteArrayAsync(uri);
-                return response;
-            }
+            Uri uri = new Uri(string.Format("https://{0}:8834/scans/{1}/export/{2}/download", nessusip, scan_id, fileId));
+            var response = await hc.GetByteArrayAsync(uri);
+            return response;
         }
 
         /// <summary>
